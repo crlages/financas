@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meus Investimentos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e0f;
+    --surface: #111618;
+    --surface2: #1a2022;
+    --border: #2a3638;
+    --accent: #00e5a0;
+    --accent2: #00b8ff;
+    --accent3: #ff6b35;
+    --text: #e8f0ef;
+    --muted: #6b8a88;
+    --danger: #ff4757;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+
+  /* ── TELA DE AUTH ── */
+  #auth-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 20% 50%, #00e5a015 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, #00b8ff10 0%, transparent 50%),
+                var(--bg);
+  }
+  .auth-box {
+    width: 420px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 48px 40px;
+    position: relative;
+  }
+  .auth-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .auth-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .auth-subtitle {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 36px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .auth-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+  }
+  .auth-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .form-group { margin-bottom: 20px; }
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .form-group input, .form-group select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    padding: 12px 14px;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--accent);
+  }
+  .form-group select option { background: var(--surface2); }
+  .btn-primary {
+    width: 100%;
+    background: var(--accent);
+    color: #0a0e0f;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-top: 8px;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+  .error-msg {
+    color: var(--danger);
+    font-size: 12px;
+    margin-top: 12px;
+    text-align: center;
+    min-height: 18px;
+  }
+
+  /* ── APP PRINCIPAL ── */
+  #app-screen { display: none; }
+  .top-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .top-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--accent);
+  }
+  .top-user {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .btn-logout {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+  .main { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+
+  /* ── FORMULÁRIO ADD ── */
+  .add-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 28px 32px;
+    margin-bottom: 40px;
+    position: relative;
+  }
+  .add-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 24px;
+    color: var(--text);
+  }
+  .form-row {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr;
+    gap: 16px;
+    align-items: end;
+  }
+  .btn-add {
+    background: var(--accent);
+    color: #0a0e0f;
+    border: none;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 13px 16px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+  .btn-add:hover { opacity: 0.85; }
+
+  /* ── GRÁFICOS ── */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 24px;
+  }
+  .chart-card.full { grid-column: 1 / -1; }
+  .chart-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  /* ── FILTRO MÊS ── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .filter-bar label { font-size: 11px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+  .filter-bar select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 2px;
+    outline: none;
+  }
+  .filter-bar select option { background: var(--surface2); }
+
+  /* ── LISTA ── */
+  .list-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 24px;
+  }
+  .list-header {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 1fr auto;
+    gap: 16px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .list-item {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 1fr auto;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid #1a2022;
+    font-size: 13px;
+    align-items: center;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .list-item:last-child { border-bottom: none; }
+  .tipo-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 2px;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .tipo-acoes    { background: #00e5a020; color: var(--accent); }
+  .tipo-fii      { background: #00b8ff20; color: var(--accent2); }
+  .tipo-renda-fixa { background: #ff6b3520; color: var(--accent3); }
+  .tipo-crypto   { background: #9b59b620; color: #c39bd3; }
+  .tipo-outro    { background: #6b8a8820; color: var(--muted); }
+  .valor-cell { color: var(--accent); font-weight: 500; }
+  .btn-del {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 2px;
+    transition: all 0.2s;
+  }
+  .btn-del:hover { border-color: var(--danger); color: var(--danger); }
+  .empty-state {
+    text-align: center;
+    padding: 48px;
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .total-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0 0;
+    margin-top: 8px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .total-bar .total-label { color: var(--muted); letter-spacing: 1px; text-transform: uppercase; font-size: 11px; }
+  .total-bar .total-val { color: var(--accent); font-size: 18px; font-family: 'DM Serif Display', serif; }
+
+  .loading { text-align: center; padding: 20px; color: var(--muted); font-size: 12px; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<!-- ══ TELA DE LOGIN / CADASTRO ══ -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">Portfólio+</div>
+    <div class="auth-subtitle">Controle de Investimentos</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Entrar</button>
+      <button class="auth-tab" onclick="switchTab('cadastro')">Cadastrar</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="tab-login">
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="login-email" placeholder="seu@email.com">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn-primary" onclick="doLogin()">Entrar</button>
+      <div class="error-msg" id="login-error"></div>
+    </div>
+
+    <!-- CADASTRO -->
+    <div id="tab-cadastro" style="display:none">
+      <div class="form-group">
+        <label>Nome</label>
+        <input type="text" id="cad-nome" placeholder="Seu nome">
+      </div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="cad-email" placeholder="seu@email.com">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="cad-senha" placeholder="Mínimo 6 caracteres">
+      </div>
+      <button class="btn-primary" onclick="doCadastro()">Criar conta</button>
+      <div class="error-msg" id="cad-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP PRINCIPAL ══ -->
+<div id="app-screen">
+  <div class="top-bar">
+    <div class="top-logo">Portfólio+</div>
+    <div class="top-user">
+      <span id="user-name-display"></span>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- ADICIONAR INVESTIMENTO -->
+    <div class="add-card">
+      <div class="card-title">Registrar Investimento</div>
+      <div class="form-row">
+        <div class="form-group" style="margin:0">
+          <label>Nome do Ativo</label>
+          <input type="text" id="inv-nome" placeholder="Ex: Tesouro IPCA+, MXRF11...">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Tipo</label>
+          <select id="inv-tipo">
+            <option value="acoes">Ações</option>
+            <option value="fii">FII</option>
+            <option value="renda-fixa">Renda Fixa</option>
+            <option value="crypto">Crypto</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Valor (R$)</label>
+          <input type="number" id="inv-valor" placeholder="0,00" min="0" step="0.01">
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Mês/Ano</label>
+          <input type="month" id="inv-mes">
+        </div>
+        <button class="btn-add" onclick="addInvestimento()">+ Adicionar</button>
+      </div>
+      <div class="error-msg" id="inv-error"></div>
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-label">Distribuição por Tipo</div>
+        <canvas id="chart-pizza" height="220"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-label">Evolução Mensal (Total)</div>
+        <canvas id="chart-barras" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- LISTA -->
+    <div class="filter-bar">
+      <label>Filtrar por mês:</label>
+      <select id="filtro-mes" onchange="renderLista()">
+        <option value="">Todos</option>
+      </select>
+    </div>
+
+    <div class="list-card">
+      <div class="list-header">
+        <span>Ativo</span>
+        <span>Tipo</span>
+        <span>Mês/Ano</span>
+        <span>Valor</span>
+        <span></span>
+      </div>
+      <div id="lista-investimentos"><div class="loading">Carregando...</div></div>
+      <div class="total-bar">
+        <span class="total-label">Total exibido</span>
+        <span class="total-val" id="total-display">R$ 0,00</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══ CONFIG ══
+const WORKER_URL = 'https://financas.crlages.workers.dev';
+
+// Dados em memória
+let currentUser = null;
+let investimentos = [];
+let chartPizza = null;
+let chartBarras = null;
+
+// ══ HASH simples de senha (não usar em prod real) ══
+async function hashSenha(senha) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(senha));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+// ══ TABS AUTH ══
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='cadastro')));
+  document.getElementById('tab-login').style.display    = tab==='login'    ? '' : 'none';
+  document.getElementById('tab-cadastro').style.display = tab==='cadastro' ? '' : 'none';
+}
+
+// ══ CADASTRO ══
+async function doCadastro() {
+  const nome  = document.getElementById('cad-nome').value.trim();
+  const email = document.getElementById('cad-email').value.trim();
+  const senha = document.getElementById('cad-senha').value;
+  const err   = document.getElementById('cad-error');
+  err.textContent = '';
+  if (!nome || !email || !senha) return err.textContent = 'Preencha todos os campos.';
+  if (senha.length < 6)          return err.textContent = 'Senha mínimo 6 caracteres.';
+
+  const hash = await hashSenha(senha);
+  const res  = await callWorker('cadastro', { nome, email, senha: hash });
+  if (res.error) return err.textContent = res.error;
+  currentUser = res.user;
+  entrarNoApp();
+}
+
+// ══ LOGIN ══
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const err   = document.getElementById('login-error');
+  err.textContent = '';
+  if (!email || !senha) return err.textContent = 'Preencha e-mail e senha.';
+
+  const hash = await hashSenha(senha);
+  const res  = await callWorker('login', { email, senha: hash });
+  if (res.error) return err.textContent = res.error;
+  currentUser = res.user;
+  entrarNoApp();
+}
+
+function doLogout() {
+  currentUser = null;
+  investimentos = [];
+  document.getElementById('app-screen').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+}
+
+function entrarNoApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display = 'block';
+  document.getElementById('user-name-display').textContent = currentUser.nome;
+  // preencher mês atual
+  const agora = new Date();
+  document.getElementById('inv-mes').value = agora.toISOString().slice(0,7);
+  carregarInvestimentos();
+}
+
+// ══ INVESTIMENTOS ══
+async function carregarInvestimentos() {
+  const res = await callWorker('listar', { usuario_id: currentUser.id });
+  investimentos = res.investimentos || [];
+  populaFiltroMes();
+  renderLista();
+  renderGraficos();
+}
+
+async function addInvestimento() {
+  const nome  = document.getElementById('inv-nome').value.trim();
+  const tipo  = document.getElementById('inv-tipo').value;
+  const valor = parseFloat(document.getElementById('inv-valor').value);
+  const mes   = document.getElementById('inv-mes').value;
+  const err   = document.getElementById('inv-error');
+  err.textContent = '';
+  if (!nome || !mes || isNaN(valor) || valor <= 0) return err.textContent = 'Preencha todos os campos corretamente.';
+
+  const [ano, m] = mes.split('-').map(Number);
+  const res = await callWorker('adicionar', { usuario_id: currentUser.id, nome, tipo, valor, mes: m, ano });
+  if (res.error) return err.textContent = res.error;
+
+  document.getElementById('inv-nome').value = '';
+  document.getElementById('inv-valor').value = '';
+  await carregarInvestimentos();
+}
+
+async function deleteInvestimento(id) {
+  await callWorker('deletar', { id, usuario_id: currentUser.id });
+  await carregarInvestimentos();
+}
+
+// ══ RENDER LISTA ══
+function renderLista() {
+  const filtro = document.getElementById('filtro-mes').value;
+  let dados = investimentos;
+  if (filtro) {
+    const [fa, fm] = filtro.split('-').map(Number);
+    dados = dados.filter(i => i.ano === fa && i.mes === fm);
+  }
+
+  const cont = document.getElementById('lista-investimentos');
+  if (!dados.length) {
+    cont.innerHTML = '<div class="empty-state">Nenhum investimento registrado ainda.<br>Adicione seu primeiro ativo acima!</div>';
+    document.getElementById('total-display').textContent = 'R$ 0,00';
+    return;
+  }
+
+  const tipoLabels = { acoes:'Ações', fii:'FII', 'renda-fixa':'Renda Fixa', crypto:'Crypto', outro:'Outro' };
+
+  cont.innerHTML = dados.map(inv => `
+    <div class="list-item">
+      <span>${inv.nome}</span>
+      <span><span class="tipo-badge tipo-${inv.tipo}">${tipoLabels[inv.tipo]||inv.tipo}</span></span>
+      <span>${String(inv.mes).padStart(2,'0')}/${inv.ano}</span>
+      <span class="valor-cell">${fmtBRL(inv.valor)}</span>
+      <button class="btn-del" onclick="deleteInvestimento(${inv.id})" title="Remover">✕</button>
+    </div>
+  `).join('');
+
+  const total = dados.reduce((s,i) => s + i.valor, 0);
+  document.getElementById('total-display').textContent = fmtBRL(total);
+}
+
+// ══ RENDER GRÁFICOS ══
+function renderGraficos() {
+  // --- Pizza: distribuição por tipo ---
+  const tipos = {};
+  investimentos.forEach(i => tipos[i.tipo] = (tipos[i.tipo]||0) + i.valor);
+  const tipoLabels = { acoes:'Ações', fii:'FII', 'renda-fixa':'Renda Fixa', crypto:'Crypto', outro:'Outro' };
+  const cores = ['#00e5a0','#00b8ff','#ff6b35','#c39bd3','#6b8a88'];
+
+  if (chartPizza) chartPizza.destroy();
+  chartPizza = new Chart(document.getElementById('chart-pizza'), {
+    type: 'doughnut',
+    data: {
+      labels: Object.keys(tipos).map(k => tipoLabels[k]||k),
+      datasets: [{ data: Object.values(tipos), backgroundColor: cores, borderWidth: 0, hoverOffset: 8 }]
+    },
+    options: {
+      plugins: {
+        legend: { labels: { color: '#6b8a88', font: { family:'DM Mono', size:11 }, padding:16 } },
+        tooltip: { callbacks: { label: ctx => ` ${fmtBRL(ctx.raw)}` } }
+      },
+      cutout: '65%'
+    }
+  });
+
+  // --- Barras: total por mês ---
+  const meses = {};
+  investimentos.forEach(i => {
+    const key = `${String(i.mes).padStart(2,'0')}/${i.ano}`;
+    meses[key] = (meses[key]||0) + i.valor;
+  });
+  const sortedKeys = Object.keys(meses).sort((a,b) => {
+    const [ma,ya] = a.split('/'); const [mb,yb] = b.split('/');
+    return (ya*100+Number(ma)) - (yb*100+Number(mb));
+  });
+
+  if (chartBarras) chartBarras.destroy();
+  chartBarras = new Chart(document.getElementById('chart-barras'), {
+    type: 'bar',
+    data: {
+      labels: sortedKeys,
+      datasets: [{
+        label: 'Total Investido',
+        data: sortedKeys.map(k => meses[k]),
+        backgroundColor: '#00e5a025',
+        borderColor: '#00e5a0',
+        borderWidth: 2,
+        borderRadius: 2
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ` ${fmtBRL(ctx.raw)}` } }
+      },
+      scales: {
+        x: { ticks: { color:'#6b8a88', font:{family:'DM Mono',size:11} }, grid:{color:'#1a2022'} },
+        y: { ticks: { color:'#6b8a88', font:{family:'DM Mono',size:11}, callback: v => 'R$ '+v.toLocaleString('pt-BR') }, grid:{color:'#1a2022'} }
+      }
+    }
+  });
+}
+
+// ══ FILTRO MÊS ══
+function populaFiltroMes() {
+  const sel = document.getElementById('filtro-mes');
+  const atual = sel.value;
+  const meses = [...new Set(investimentos.map(i => `${i.ano}-${String(i.mes).padStart(2,'0')}`))].sort();
+  sel.innerHTML = '<option value="">Todos os meses</option>' +
+    meses.map(m => {
+      const [a,ms] = m.split('-');
+      return `<option value="${m}" ${m===atual?'selected':''}>${ms}/${a}</option>`;
+    }).join('');
+}
+
+// ══ UTILS ══
+function fmtBRL(v) {
+  return 'R$ ' + v.toLocaleString('pt-BR', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+
+// ══ COMUNICAÇÃO COM WORKER ══
+async function callWorker(action, body) {
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...body })
+    });
+    return await res.json();
+  } catch(e) {
+    return { error: 'Erro de conexão com o servidor.' };
+  }
+}
+</script>
+</body>
+</html>

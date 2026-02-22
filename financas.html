@@ -709,7 +709,7 @@ body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospa
 <script>
 const WORKER = 'https://financas.crlages.workers.dev';
 let user = null, dados = [], cP = null, cB = null, previewRows = [];
-let carteiraAtual = null, carteiras = [], metasPremium = {};
+
 
 // ── UTILS ──
 async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
@@ -743,12 +743,10 @@ function doLogout(){user=null;dados=[];document.getElementById('app-screen').sty
 function entrar(){
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
-document.getElementById('user-nome').textContent=user.nome;  document.getElementById('m-mes').value=new Date().toISOString().slice(0,7);
+  document.getElementById('user-nome').textContent=user.nome;
+  document.getElementById('m-mes').value=new Date().toISOString().slice(0,7);
   document.getElementById('paste-mes').value=new Date().toISOString().slice(0,7);
-  api('setupDb',{}).then(()=>{
-    carregar();
-    if(isPremium) carregarCarteiras();
-  });
+  carregar();
 }
 
 // ── PASTE ZONE ──
@@ -1374,7 +1372,6 @@ function renderModalPremium(etapa, dados={}){
         </div>
         <div class="pix-hint">Clique no código para copiar · O pagamento é confirmado automaticamente</div>
       </div>`:'<div class="pix-box"><div class="pix-hint">Gerando PIX...</div></div>'}
-      <div class="modal-status-check" onclick="verificarPagamento()">
         ↻ Já paguei — verificar pagamento
       </div>
     `;
@@ -1457,172 +1454,6 @@ async function copiarPix(code){
   alert('Código PIX copiado!');
 }
 
-async function verificarPagamento(){
-  const r=await api('verificarPlano',{usuario_id:user.id});
-  if(r.plano==='premium'){    renderModalPremium('sucesso');
-    // Atualizar badge    carregarCarteiras();
-    mostrarSecoesPremium();
-  } else {
-    alert('Pagamento ainda não confirmado. Aguarde alguns instantes e tente novamente.');
-  }
-}
-
-// ── MOSTRAR/OCULTAR SEÇÕES PREMIUM ───────────────────────────────
-function mostrarSecoesPremium(){
-  document.getElementById('carteiras-section').style.display=prem?'block':'none';
-  document.getElementById('metas-section').style.display=prem?'block':'none';
-  document.getElementById('alertas-section').style.display=prem?'block':'none';
-}
-
-// ── CARTEIRAS ─────────────────────────────────────────────────────
-async function carregarCarteiras(){
-  const r=await api('listarCarteiras',{usuario_id:user.id});
-  if(r.error)return;
-  carteiras=r.carteiras||[];
-  renderCarteirasTabs();
-  mostrarSecoesPremium();
-}
-
-function renderCarteirasTabs(){
-  const bar=document.getElementById('carteiras-bar');
-  let html=`<button class="carteira-tab${carteiraAtual===null?' active':''}" onclick="selecionarCarteira(null)">Principal</button>`;
-  carteiras.forEach(ct=>{
-    html+=`<button class="carteira-tab${carteiraAtual===ct.id?' active':''}" onclick="selecionarCarteira(${ct.id})">${ct.nome}</button>`;
-  });
-  html+=`<button class="btn-nova-carteira" onclick="criarCarteiraPrompt()">+ Nova carteira</button>`;
-  bar.innerHTML=html;
-}
-
-async function selecionarCarteira(id){
-  carteiraAtual=id;
-  renderCarteirasTabs();
-  await carregar();
-}
-
-async function criarCarteiraPrompt(){
-  const nome=prompt('Nome da nova carteira:');
-  if(!nome||!nome.trim())return;
-  const desc=prompt('Descrição (opcional):','');
-  const r=await api('criarCarteira',{usuario_id:user.id,nome:nome.trim(),descricao:desc||''});
-  if(r.error)return alert(r.error);
-  carteiras.push(r.carteira);
-  carteiraAtual=r.carteira.id;
-  renderCarteirasTabs();
-  await carregar();
-}
-
-// ── METAS DE ALOCAÇÃO ─────────────────────────────────────────────
-async function carregarMetas(){
-  const r=await api('listarMetas',{usuario_id:user.id});
-  if(r.error)return;
-  metasPremium={};
-  (r.metas||[]).forEach(m=>metasPremium[m.tipo]=m.meta_pct);
-}
-
-  const cons=consolidar(dados);
-  const total=cons.reduce((s,i)=>s+i.valor,0)||1;
-  const porTipo={};
-  cons.forEach(i=>porTipo[i.tipo]=(porTipo[i.tipo]||0)+i.valor);
-  const tipos=['fii','acoes','etf','renda-fixa','crypto','outro'];
-  const cores={fii:'var(--blue)',acoes:'var(--green)',etf:'var(--yellow)',crypto:'var(--purple)','renda-fixa':'var(--orange)',outro:'var(--muted)'};
-  const grid=document.getElementById('metas-grid');
-  if(!grid)return;
-  grid.innerHTML=tipos.map(tipo=>{
-    const val=porTipo[tipo]||0;
-    const real=total>0?(val/total*100):0;
-    const meta=metasPremium[tipo]||0;
-    const diff=real-meta;
-    const cor=cores[tipo]||'var(--muted)';
-    const diffColor=meta===0?'var(--muted)':Math.abs(diff)<=3?'var(--green)':Math.abs(diff)<=8?'var(--yellow)':'var(--red)';
-    const diffStr=meta>0?(diff>=0?`+${diff.toFixed(1)}% acima`:`${diff.toFixed(1)}% abaixo`):'sem meta';
-    return`<div class="meta-item">
-      <div class="meta-header">
-        <span class="meta-name">${TL[tipo]||tipo}</span>
-        <span class="meta-pct" style="color:${cor}">${real.toFixed(1)}%</span>
-      </div>
-      <div class="meta-bar-bg">
-        <div class="meta-bar-fill" style="width:${Math.min(real,100)}%;background:${cor}"></div>
-      </div>
-      <div class="meta-sub">
-        <span style="color:${diffColor}">${diffStr}</span>
-        <button class="meta-edit-btn" onclick="editarMeta('${tipo}')">meta: ${meta}%</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-async function editarMeta(tipo){
-  const atual=metasPremium[tipo]||0;
-  const novo=prompt(`Meta de alocação para ${TL[tipo]||tipo} (%):`,atual);
-  if(novo===null)return;
-  const v=parseFloat(novo);
-  if(isNaN(v)||v<0||v>100)return alert('Digite entre 0 e 100.');
-  await api('salvarMeta',{usuario_id:user.id,tipo,meta_pct:v});
-  metasPremium[tipo]=v;
-}
-
-// ── ALERTAS ───────────────────────────────────────────────────────
-  const r=await api('listarAlertas',{usuario_id:user.id});
-  if(r.error)return;
-  renderAlertas(r.alertas||[]);
-}
-
-function renderAlertas(alertas){
-  const el=document.getElementById('alertas-list');
-  if(!el)return;
-  if(!alertas.length){el.innerHTML='<div style="font-size:11px;color:var(--muted)">Nenhum alerta criado ainda.</div>';return;}
-  const tipoLabel={pvp_abaixo:'P/VP abaixo de',pvp_acima:'P/VP acima de',pl_abaixo:'P/L abaixo de',preco_abaixo:'Preço abaixo de R$'};
-  el.innerHTML=alertas.map(a=>`
-    <div class="alerta-item">
-      <span class="alerta-ticker">${a.ticker}</span>
-      <span class="alerta-desc">${tipoLabel[a.tipo]||a.tipo} ${a.valor}</span>
-      <button class="alerta-del" onclick="deletarAlerta(${a.id})">✕</button>
-    </div>`).join('');
-}
-
-async function criarAlerta(){
-  const ticker=document.getElementById('alerta-ticker').value.trim().toUpperCase();
-  const tipo=document.getElementById('alerta-tipo').value;
-  const valor=parseFloat(document.getElementById('alerta-valor').value);
-  if(!ticker||isNaN(valor))return alert('Preencha ticker e valor.');
-  const r=await api('criarAlerta',{usuario_id:user.id,ticker,tipo,valor});
-  if(r.error)return alert(r.error);
-  document.getElementById('alerta-ticker').value='';
-  document.getElementById('alerta-valor').value='';
-}
-
-async function deletarAlerta(id){
-  await api('deletarAlerta',{usuario_id:user.id,alerta_id:id});
-}
-
-// ── HISTÓRICO DE PREÇOS ───────────────────────────────────────────
-let cHist=null;
-async function verHistorico(ticker){
-  document.getElementById('modal-historico').style.display='flex';
-  document.getElementById('hist-titulo').textContent='Histórico de preços — '+ticker;
-  const r=await api('listarHistorico',{usuario_id:user.id,ticker});
-  if(r.error||!r.historico?.length){
-    document.getElementById('chart-historico').style.display='none';
-    return;
-  }
-  const labels=r.historico.map(h=>h.data);
-  const values=r.historico.map(h=>h.preco);
-  if(cHist)cHist.destroy();
-  cHist=new Chart(document.getElementById('chart-historico'),{
-    type:'line',
-    data:{labels,datasets:[{
-      label:'Preço',data:values,borderColor:'#00f5a0',backgroundColor:'#00f5a010',
-      fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#00f5a0',
-    }]},
-    options:{
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${R(ctx.raw)}`}}},
-      scales:{
-        x:{ticks:{color:'#4d6b70',font:{family:'JetBrains Mono',size:9}},grid:{color:'#161c1e'}},
-        y:{ticks:{color:'#4d6b70',font:{family:'JetBrains Mono',size:9},callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'#161c1e'}},
-      }
-    }
-  });
-}
 
 // ── FILTRO ──
 function populaFiltro(){
@@ -1630,8 +1461,7 @@ function populaFiltro(){
   const meses=[...new Set(dados.map(i=>`${i.ano}-${String(i.mes).padStart(2,'0')}`))].sort();
   sel.innerHTML='<option value="">Todos os meses</option>'+meses.map(m=>{const[a,ms]=m.split('-');return`<option value="${m}"${m===atual?' selected':''}>${ms}/${a}</option>`;}).join('');
 }
-</script>
 
-<!-- ══ MODAL PREMIUM ══ -->
+</script>
 </body>
 </html>

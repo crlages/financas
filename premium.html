@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Portfólio+ Premium</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07090a;--s1:#0f1314;--s2:#161c1e;--s3:#1e2729;
+  --border:#263032;--green:#00f5a0;--blue:#38bdf8;--orange:#fb923c;
+  --purple:#a78bfa;--yellow:#fbbf24;--red:#f87171;
+  --text:#e2eaec;--muted:#4d6b70;--muted2:#2a4048;
+  --gold:#fbbf24;--gold2:#fb923c;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospace;min-height:100vh;}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--s1);border-bottom:1px solid var(--border);
+  padding:14px 32px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;
+}
+.topbar-logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:-1px;}
+.topbar-logo span{color:var(--gold);}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.topbar-user{font-size:11px;color:var(--muted);letter-spacing:1px;}
+.badge-premium{
+  background:linear-gradient(90deg,var(--gold),var(--gold2));
+  color:#07090a;font-size:9px;letter-spacing:1px;text-transform:uppercase;
+  font-weight:700;padding:3px 8px;border-radius:2px;
+}
+.btn-out{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;padding:5px 11px;border-radius:3px;cursor:pointer;transition:all .2s;
+}
+.btn-out:hover{border-color:var(--red);color:var(--red);}
+.btn-voltar{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;padding:5px 11px;border-radius:3px;cursor:pointer;
+  text-decoration:none;transition:all .2s;
+}
+.btn-voltar:hover{border-color:var(--green);color:var(--green);}
+
+/* ── MAIN ── */
+.main{max-width:1140px;margin:0 auto;padding:36px 24px;}
+.section-eyebrow{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+
+/* ── TELA DE LOGIN ── */
+#login-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:
+    radial-gradient(circle at 15% 85%,#fbbf2408 0%,transparent 45%),
+    radial-gradient(circle at 85% 15%,#fb923c08 0%,transparent 45%),
+    var(--bg);
+}
+.login-box{
+  width:380px;background:var(--s1);border:1px solid var(--border);
+  border-radius:4px;padding:40px 36px;
+}
+.login-box::before{
+  content:'';display:block;height:3px;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));
+  margin:-40px -36px 32px;border-radius:4px 4px 0 0;
+}
+.login-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;margin-bottom:6px;}
+.login-title span{color:var(--gold);}
+.login-sub{font-size:11px;color:var(--muted);margin-bottom:28px;letter-spacing:.5px;}
+.fg{margin-bottom:18px;}
+.fg label{display:block;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.fg input{
+  width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:13px;padding:11px 13px;
+  border-radius:3px;outline:none;transition:border-color .2s;
+}
+.fg input:focus{border-color:var(--gold);}
+.btn-login{
+  width:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  color:#07090a;border:none;font-family:'JetBrains Mono',monospace;
+  font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  padding:13px;border-radius:3px;cursor:pointer;transition:opacity .2s;margin-top:4px;
+}
+.btn-login:hover{opacity:.85;}
+.auth-err{color:var(--red);font-size:11px;margin-top:10px;text-align:center;min-height:16px;}
+
+/* ── TELA DE ASSINATURA (não premium) ── */
+#upgrade-screen{display:none;}
+.upgrade-hero{
+  text-align:center;padding:60px 24px 40px;
+  background:radial-gradient(circle at 50% 0%,#fbbf2406 0%,transparent 60%);
+}
+.upgrade-title{font-family:'Syne',sans-serif;font-size:42px;font-weight:800;line-height:1.1;}
+.upgrade-title span{color:var(--gold);}
+.upgrade-sub{font-size:13px;color:var(--muted);margin-top:12px;letter-spacing:.5px;}
+.upgrade-price{
+  margin:40px auto;max-width:360px;
+  background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:32px;
+  position:relative;overflow:hidden;
+}
+.upgrade-price::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));
+}
+.price-num{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;color:var(--gold);line-height:1;}
+.price-period{font-size:12px;color:var(--muted);margin-top:6px;letter-spacing:1px;}
+.price-features{margin-top:24px;display:flex;flex-direction:column;gap:10px;}
+.price-feat{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted);letter-spacing:.5px;}
+.price-feat::before{content:'✓';color:var(--gold);font-weight:700;flex-shrink:0;}
+.btn-assinar{
+  width:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  color:#07090a;border:none;font-family:'JetBrains Mono',monospace;
+  font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  padding:16px;border-radius:3px;cursor:pointer;transition:opacity .2s;margin-top:28px;
+}
+.btn-assinar:hover{opacity:.85;}
+.btn-assinar:disabled{opacity:.4;cursor:not-allowed;}
+.assinar-status{font-size:11px;color:var(--muted);text-align:center;margin-top:12px;min-height:16px;}
+
+/* Link de pagamento MP */
+.mp-link-box{
+  margin-top:16px;padding:16px;background:var(--s2);border:1px solid var(--border);
+  border-radius:3px;display:none;
+}
+.mp-link-box a{
+  display:block;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  color:#07090a;text-align:center;padding:13px;border-radius:3px;
+  text-decoration:none;font-weight:700;font-size:12px;letter-spacing:2px;
+  text-transform:uppercase;transition:opacity .2s;
+}
+.mp-link-box a:hover{opacity:.85;}
+.mp-link-hint{font-size:10px;color:var(--muted);text-align:center;margin-top:10px;}
+.btn-verificar{
+  width:100%;background:none;border:1px solid var(--border);color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;padding:8px;border-radius:3px;cursor:pointer;
+  transition:all .2s;margin-top:8px;
+}
+.btn-verificar:hover{border-color:var(--green);color:var(--green);}
+
+/* ── APP PREMIUM ── */
+#app-screen{display:none;}
+
+/* ── TABS DE NAVEGAÇÃO ── */
+.prem-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:32px;}
+.prem-tab{
+  background:none;border:none;border-bottom:2px solid transparent;
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;
+  text-transform:uppercase;color:var(--muted);padding:12px 20px;
+  cursor:pointer;transition:all .2s;margin-bottom:-1px;
+}
+.prem-tab:hover{color:var(--text);}
+.prem-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.prem-panel{display:none;}
+.prem-panel.active{display:block;}
+
+/* ── CARDS METAS ── */
+.metas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.meta-card{
+  background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:18px;
+}
+.meta-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.meta-name{font-size:12px;color:var(--text);}
+.meta-pct{font-size:14px;font-weight:600;}
+.meta-bar-bg{height:4px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.meta-bar-fill{height:100%;border-radius:2px;transition:width .4s;}
+.meta-footer{display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:var(--muted);}
+.meta-edit-btn{
+  background:none;border:none;color:var(--muted);font-family:inherit;
+  font-size:10px;cursor:pointer;transition:color .2s;padding:0;
+}
+.meta-edit-btn:hover{color:var(--gold);}
+
+/* ── CARTEIRAS ── */
+.carteiras-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.carteira-tab{
+  background:none;border:1px solid var(--border);color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;transition:all .2s;
+}
+.carteira-tab:hover{border-color:var(--green);color:var(--green);}
+.carteira-tab.active{background:var(--green);color:#07090a;border-color:var(--green);}
+.btn-nova-carteira{
+  background:none;border:1px dashed var(--border);color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;padding:6px 14px;border-radius:3px;cursor:pointer;transition:all .2s;
+}
+.btn-nova-carteira:hover{border-color:var(--gold);color:var(--gold);}
+
+/* ── ALERTAS ── */
+.alerta-form{
+  display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;
+  background:var(--s1);border:1px solid var(--border);border-radius:4px;
+  padding:20px;margin-bottom:20px;
+}
+.alerta-form .fg{margin:0;flex:1;min-width:120px;}
+.alerta-form input,.alerta-form select{
+  width:100%;background:var(--s2);border:1px solid var(--border);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:12px;padding:9px 11px;
+  border-radius:3px;outline:none;transition:border-color .2s;
+}
+.alerta-form input:focus,.alerta-form select:focus{border-color:var(--gold);}
+.btn-add-alerta{
+  background:var(--s3);border:1px solid var(--border);color:var(--gold);
+  font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:1px;
+  text-transform:uppercase;padding:9px 16px;border-radius:3px;cursor:pointer;
+  white-space:nowrap;transition:all .2s;
+}
+.btn-add-alerta:hover{background:var(--gold);color:#07090a;border-color:var(--gold);}
+.alertas-list{display:flex;flex-direction:column;gap:8px;}
+.alerta-item{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--s1);border:1px solid var(--border);border-radius:3px;padding:12px 16px;
+}
+.alerta-info{display:flex;gap:16px;align-items:center;}
+.alerta-ticker{font-size:13px;font-weight:600;color:var(--text);}
+.alerta-desc{font-size:11px;color:var(--muted);}
+.btn-del-alerta{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:14px;transition:color .2s;padding:4px;
+}
+.btn-del-alerta:hover{color:var(--red);}
+
+/* ── HISTÓRICO ── */
+.hist-select{display:flex;gap:10px;align-items:center;margin-bottom:20px;flex-wrap:wrap;}
+.hist-select select,.hist-select input{
+  background:var(--s2);border:1px solid var(--border);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:12px;padding:8px 12px;
+  border-radius:3px;outline:none;transition:border-color .2s;
+}
+.hist-select select:focus,.hist-select input:focus{border-color:var(--gold);}
+.btn-ver-hist{
+  background:var(--s3);border:1px solid var(--border);color:var(--blue);
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;padding:8px 16px;border-radius:3px;cursor:pointer;transition:all .2s;
+}
+.btn-ver-hist:hover{background:var(--blue);color:#07090a;border-color:var(--blue);}
+.hist-card{background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:22px;}
+
+/* ── PDF / PRINT ── */
+@media print {
+  .topbar,.prem-tabs,.btn-exportar-pdf,.alerta-form,.hist-select,
+  .btn-del-alerta,.meta-edit-btn,.btn-voltar,.btn-out,.badge-premium { display:none!important; }
+  body { background:#fff!important; color:#000!important; font-size:12px; }
+  .prem-panel { display:block!important; }
+  .main { padding:0!important; max-width:100%!important; }
+  .pdf-header { display:block!important; }
+  .meta-card,.alerta-item,.hist-card { border:1px solid #ccc!important; background:#fff!important; }
+  .meta-pct,.alerta-ticker { color:#000!important; }
+  .meta-bar-bg { background:#eee!important; }
+  .meta-bar-fill { print-color-adjust:exact; -webkit-print-color-adjust:exact; }
+  .section-eyebrow { color:#666!important; }
+}
+.pdf-header {
+  display:none;
+  margin-bottom:20px;
+  border-bottom:2px solid #000;
+  padding-bottom:12px;
+}
+.pdf-header-title { font-size:20px; font-weight:800; }
+.pdf-header-sub   { font-size:12px; color:#666; margin-top:4px; }
+
+.btn-exportar-pdf {
+  background:none;border:1px solid var(--border);color:var(--muted);
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;
+  text-transform:uppercase;padding:6px 14px;border-radius:3px;
+  cursor:pointer;transition:all .2s;
+}
+.btn-exportar-pdf:hover { border-color:var(--gold);color:var(--gold); }
+
+/* ── ALERTA VISUAL ATIVADO ── */
+.alerta-item.ativado {
+  border-color:var(--yellow);
+  background:linear-gradient(90deg,#fbbf2408,transparent);
+}
+.alerta-item.ativado .alerta-desc { color:var(--yellow); }
+.alerta-badge-on {
+  font-size:9px;letter-spacing:1px;text-transform:uppercase;
+  background:#fbbf2420;color:var(--yellow);
+  padding:2px 7px;border-radius:2px;font-weight:600;
+}
+
+/* ── RESPONSIVO ── */
+@media(max-width:768px){
+  .topbar{padding:12px 16px;}
+  .main{padding:20px 14px;}
+  .metas-grid{grid-template-columns:1fr 1fr;}
+  .upgrade-title{font-size:28px;}
+  .prem-tab{font-size:9px;padding:10px 12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-title">Portfólio+ <span>Premium</span></div>
+    <div class="login-sub">Entre com sua conta para acessar</div>
+    <div class="fg"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com"></div>
+    <div class="fg"><label>Senha</label><input type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="btn-login" onclick="doLogin()">Entrar</button>
+    <div class="auth-err" id="login-err"></div>
+    <div style="margin-top:20px;text-align:center;">
+      <a href="https://financas.crlages.workers.dev" style="font-size:11px;color:var(--muted);text-decoration:none;">
+        ← Voltar ao app principal
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ══ UPGRADE (free user) ══ -->
+<div id="upgrade-screen">
+  <div class="topbar">
+    <div class="topbar-logo">Portfólio+ <span>Premium</span></div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="user-nome-up"></span>
+      <a href="https://financas.crlages.workers.dev" class="btn-voltar">← App principal</a>
+      <button class="btn-out" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+  <div class="upgrade-hero">
+    <div class="upgrade-title">Eleve sua carteira<br>ao próximo nível <span>⭐</span></div>
+    <div class="upgrade-sub">Ferramentas profissionais por menos de um café por mês</div>
+  </div>
+  <div style="max-width:420px;margin:0 auto;padding:0 24px 60px;">
+    <div class="upgrade-price">
+      <div class="price-num">R$ 5</div>
+      <div class="price-period">por mês · cancele quando quiser</div>
+      <div class="price-features">
+        <div class="price-feat">Múltiplas carteiras (aposentadoria, especulativo...)</div>
+        <div class="price-feat">Metas de alocação por tipo de ativo</div>
+        <div class="price-feat">Alertas de P/VP, P/L e preço</div>
+        <div class="price-feat">Histórico de preços por ativo</div>
+        <div class="price-feat">Atualização automática de preços</div>
+      </div>
+      <button class="btn-assinar" id="btn-assinar" onclick="assinar()">
+        ⭐ Assinar agora — R$ 5/mês
+      </button>
+      <div class="assinar-status" id="assinar-status"></div>
+      <div class="mp-link-box" id="mp-link-box">
+        <a id="mp-link" href="#" target="_blank">💳 Pagar com Mercado Pago</a>
+        <div class="mp-link-hint">Aceita PIX, cartão de crédito e débito</div>
+        <button class="btn-verificar" onclick="verificarPagamento()">✓ Já paguei — verificar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APP PREMIUM ══ -->
+<div id="app-screen">
+  <div class="topbar">
+    <div class="topbar-logo">Portfólio+ <span>Premium</span></div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="user-nome-app"></span>
+      <span class="badge-premium">⭐ Premium</span>
+      <button class="btn-exportar-pdf" onclick="exportarPDF()">⬇ Exportar PDF</button>
+      <a href="https://financas.crlages.workers.dev" class="btn-voltar">← App principal</a>
+      <button class="btn-out" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Tabs de navegação -->
+    <div class="prem-tabs">
+      <button class="prem-tab active" onclick="showTab('metas')">Metas</button>
+      <button class="prem-tab" onclick="showTab('carteiras')">Carteiras</button>
+      <button class="prem-tab" onclick="showTab('alertas')">Alertas</button>
+      <button class="prem-tab" onclick="showTab('historico')">Histórico</button>
+      <button class="prem-tab" onclick="showTab('relatorio')">Relatório PDF</button>
+    </div>
+
+    <!-- ── METAS ── -->
+    <div class="prem-panel active" id="panel-metas">
+      <div class="section-eyebrow">Metas de alocação</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:20px;letter-spacing:.5px;">
+        Defina o % ideal de cada tipo de ativo na sua carteira. Clique em "meta" para editar.
+      </div>
+      <div class="metas-grid" id="metas-grid">
+        <div style="color:var(--muted);font-size:12px;">Carregando...</div>
+      </div>
+    </div>
+
+    <!-- ── CARTEIRAS ── -->
+    <div class="prem-panel" id="panel-carteiras">
+      <div class="section-eyebrow">Múltiplas carteiras</div>
+      <div class="carteiras-bar" id="carteiras-bar"></div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:20px;letter-spacing:.5px;" id="carteira-desc"></div>
+      <div style="font-size:12px;color:var(--muted);padding:40px;text-align:center;background:var(--s1);border:1px solid var(--border);border-radius:4px;">
+        Gerencie sua carteira no <a href="https://financas.crlages.workers.dev" style="color:var(--green);">app principal</a>.
+        As carteiras criadas aqui ficam disponíveis para filtrar lá.
+      </div>
+    </div>
+
+    <!-- ── ALERTAS ── -->
+    <div class="prem-panel" id="panel-alertas">
+      <div class="section-eyebrow">Alertas de indicadores</div>
+      <div class="alerta-form">
+        <div class="fg"><label>Ticker</label><input type="text" id="alerta-ticker" placeholder="Ex: MXRF11" style="text-transform:uppercase"></div>
+        <div class="fg"><label>Tipo</label>
+          <select id="alerta-tipo">
+            <option value="pvp_abaixo">P/VP abaixo de</option>
+            <option value="pvp_acima">P/VP acima de</option>
+            <option value="pl_abaixo">P/L abaixo de</option>
+            <option value="preco_abaixo">Preço abaixo de R$</option>
+          </select>
+        </div>
+        <div class="fg"><label>Valor</label><input type="number" id="alerta-valor" placeholder="0.00" step="0.01"></div>
+        <button class="btn-add-alerta" onclick="criarAlerta()">+ Criar alerta</button>
+      </div>
+      <div class="alertas-list" id="alertas-list">
+        <div style="color:var(--muted);font-size:12px;">Carregando alertas...</div>
+      </div>
+    </div>
+
+    <!-- ── RELATÓRIO PDF ── -->
+    <div class="prem-panel" id="panel-relatorio">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div class="section-eyebrow" style="margin:0">Relatório da carteira</div>
+        <button class="btn-exportar-pdf" onclick="exportarPDF()" style="font-size:11px;padding:8px 18px;border-color:var(--gold);color:var(--gold);">
+          ⬇ Baixar PDF
+        </button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:24px;">
+        O relatório inclui: resumo da carteira, metas de alocação e alertas configurados.
+        Clique em "Baixar PDF" para gerar e salvar.
+      </div>
+
+      <!-- Prévia do relatório (também é o que imprime) -->
+      <div id="pdf-preview" style="background:var(--s1);border:1px solid var(--border);border-radius:4px;padding:28px;">
+
+        <!-- Cabeçalho do PDF -->
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800;">Portfólio+ <span style="color:var(--gold)">Premium</span></div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px;">Relatório da carteira</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:11px;color:var(--muted)" id="pdf-data"></div>
+            <div style="font-size:12px;color:var(--text);margin-top:4px;" id="pdf-usuario"></div>
+          </div>
+        </div>
+
+        <!-- Resumo -->
+        <div style="margin-bottom:24px;">
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Resumo</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;" id="pdf-resumo"></div>
+        </div>
+
+        <!-- Metas -->
+        <div style="margin-bottom:24px;">
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Alocação atual vs metas</div>
+          <div id="pdf-metas-list"></div>
+        </div>
+
+        <!-- Alertas -->
+        <div>
+          <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;">Alertas configurados</div>
+          <div id="pdf-alertas-list"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── HISTÓRICO ── -->
+    <div class="prem-panel" id="panel-historico">
+      <div class="section-eyebrow">Histórico de preços</div>
+      <div class="hist-select">
+        <div class="fg" style="margin:0">
+          <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;">Ticker</label>
+          <input type="text" id="hist-ticker" placeholder="Ex: MXRF11" style="text-transform:uppercase;width:140px;">
+        </div>
+        <button class="btn-ver-hist" onclick="verHistorico()" style="margin-top:22px;">Ver histórico</button>
+      </div>
+      <div class="hist-card">
+        <div id="hist-vazio" style="text-align:center;padding:40px;font-size:12px;color:var(--muted);">
+          Digite um ticker e clique em "Ver histórico"
+        </div>
+        <canvas id="chart-historico" style="display:none;"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const WORKER      = 'https://financas.crlages.workers.dev';
+const WORKER_PREM = 'https://financas-premium.crlages.workers.dev';
+let user = null;
+let dadosInvestimentos = [];
+let metasPremium = {};
+let alertasList = [];
+let cHist = null;
+
+const TL = {fii:'FII',acoes:'Ações',etf:'ETF','renda-fixa':'Renda Fixa',crypto:'Crypto',outro:'Outro'};
+const CORES = {fii:'var(--blue)',acoes:'var(--green)',etf:'var(--yellow)',crypto:'var(--purple)','renda-fixa':'var(--orange)',outro:'var(--muted)'};
+
+// ── UTILS ──
+async function api(action, body){
+  const r = await fetch(WORKER, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action, ...body})
+  });
+  return r.json();
+}
+
+async function apiPrem(action, body){
+  const r = await fetch(WORKER_PREM, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({action, ...body})
+  });
+  return r.json();
+}
+
+// ── AUTENTICAÇÃO ──
+async function doLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const err   = document.getElementById('login-err');
+  err.textContent = '';
+  if(!email||!senha) return err.textContent='Preencha e-mail e senha.';
+
+  const r = await api('login', {email, senha});
+  if(r.error) return err.textContent = r.error;
+  user = r.user;
+  localStorage.setItem('pf_user', JSON.stringify(user));
+  entrar();
+}
+
+function doLogout(){
+  localStorage.removeItem('pf_user');
+  user = null;
+  document.getElementById('login-screen').style.display  = 'flex';
+  document.getElementById('upgrade-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display    = 'none';
+}
+
+function entrar(){
+  document.getElementById('login-screen').style.display = 'none';
+  if(user.plano === 'premium'){
+    abrirAppPremium();
+  } else {
+    abrirUpgrade();
+  }
+}
+
+function abrirUpgrade(){
+  document.getElementById('upgrade-screen').style.display = 'block';
+  document.getElementById('app-screen').style.display     = 'none';
+  document.getElementById('user-nome-up').textContent     = user.nome;
+}
+
+function abrirAppPremium(){
+  document.getElementById('upgrade-screen').style.display = 'none';
+  document.getElementById('app-screen').style.display     = 'block';
+  document.getElementById('user-nome-app').textContent    = user.nome;
+
+  // Inicializar tabelas premium (idempotente)
+  apiPrem('setupPremium', {}).then(() => {
+    carregarTudo().then(()=>renderRelatorio());
+  });
+}
+
+// ── TABS ──
+function showTab(tab){
+  document.querySelectorAll('.prem-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.prem-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`.prem-tab[onclick="showTab('${tab}')"]`).classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+// ── ASSINATURA ──
+async function assinar(){
+  const btn    = document.getElementById('btn-assinar');
+  const status = document.getElementById('assinar-status');
+  btn.disabled = true;
+  btn.textContent = 'Criando link de pagamento...';
+  status.textContent = '';
+
+  const r = await apiPrem('criarPagamento', {usuario_id: user.id, email: user.email});
+
+  if(r.error){
+    status.textContent = 'Erro: ' + r.error;
+    btn.disabled = false;
+    btn.textContent = '⭐ Assinar agora — R$ 5/mês';
+    return;
+  }
+
+  // Mostrar link do Mercado Pago
+  const box  = document.getElementById('mp-link-box');
+  const link = document.getElementById('mp-link');
+  link.href = r.init_point || r.sandbox_init_point;
+  box.style.display = 'block';
+  btn.textContent = '⭐ Assinar agora — R$ 5/mês';
+  btn.disabled = false;
+  status.textContent = 'Link gerado! Clique abaixo para pagar.';
+}
+
+async function verificarPagamento(){
+  const status = document.getElementById('assinar-status');
+  status.textContent = 'Verificando pagamento...';
+
+  const r = await apiPrem('verificarPagamento', {usuario_id: user.id});
+
+  if(r.plano === 'premium'){
+    user.plano = 'premium';
+    user.premium_ate = r.premium_ate;
+    localStorage.setItem('pf_user', JSON.stringify(user));
+    status.textContent = '✓ Pagamento confirmado! Bem-vindo ao Premium!';
+    setTimeout(()=>abrirAppPremium(), 1500);
+  } else {
+    status.textContent = 'Pagamento não confirmado ainda. Status: ' + (r.mp_status||'pendente');
+  }
+}
+
+// ── CARREGAR TUDO ──
+async function carregarTudo(){
+  const r = await api('listar', {usuario_id: user.id});
+  dadosInvestimentos = r.investimentos || [];
+  await Promise.all([carregarMetas(), carregarAlertas()]);
+}
+
+// ── METAS ──
+async function carregarMetas(){
+  const r = await apiPrem('listarMetas', {usuario_id: user.id});
+  if(r.error === 'premium_required'){ abrirUpgrade(); return; }
+  metasPremium = {};
+  (r.metas||[]).forEach(m => metasPremium[m.tipo] = m.meta_pct);
+  renderMetas();
+}
+
+function renderMetas(){
+  const total = dadosInvestimentos.reduce((s,i)=>s+i.valor,0)||1;
+  const porTipo = {};
+  dadosInvestimentos.forEach(i => porTipo[i.tipo] = (porTipo[i.tipo]||0)+i.valor);
+
+  const tipos = ['fii','acoes','etf','renda-fixa','crypto','outro'];
+  const grid  = document.getElementById('metas-grid');
+
+  grid.innerHTML = tipos.map(tipo => {
+    const val  = porTipo[tipo]||0;
+    const real = (val/total*100);
+    const meta = metasPremium[tipo]||0;
+    const diff = real-meta;
+    const cor  = CORES[tipo]||'var(--muted)';
+    const diffColor = meta===0?'var(--muted)':Math.abs(diff)<=3?'var(--green)':Math.abs(diff)<=8?'var(--yellow)':'var(--red)';
+    const diffStr   = meta>0?(diff>=0?`+${diff.toFixed(1)}% acima`:`${diff.toFixed(1)}% abaixo`):'sem meta';
+
+    return `<div class="meta-card">
+      <div class="meta-header">
+        <span class="meta-name">${TL[tipo]||tipo}</span>
+        <span class="meta-pct" style="color:${cor}">${real.toFixed(1)}%</span>
+      </div>
+      <div class="meta-bar-bg">
+        <div class="meta-bar-fill" style="width:${Math.min(real,100)}%;background:${cor}"></div>
+      </div>
+      <div class="meta-footer">
+        <span style="color:${diffColor}">${diffStr}</span>
+        <button class="meta-edit-btn" onclick="editarMeta('${tipo}')">meta: ${meta}%</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function editarMeta(tipo){
+  const atual = metasPremium[tipo]||0;
+  const novo  = prompt(`Meta para ${TL[tipo]||tipo} (%):`, atual);
+  if(novo===null) return;
+  const v = parseFloat(novo);
+  if(isNaN(v)||v<0||v>100) return alert('Digite um valor entre 0 e 100.');
+  await apiPrem('salvarMeta', {usuario_id: user.id, tipo, meta_pct: v});
+  metasPremium[tipo] = v;
+  renderMetas();
+}
+
+// ── ALERTAS ──
+async function carregarAlertas(){
+  const r = await apiPrem('listarAlertas', {usuario_id: user.id});
+  if(r.error === 'premium_required'){ return; }
+  alertasList = r.alertas||[];
+  renderAlertas();
+}
+
+function renderAlertas(){
+  const el = document.getElementById('alertas-list');
+  if(!alertasList.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:20px;text-align:center;">Nenhum alerta criado ainda.</div>';
+    return;
+  }
+  const tipoLabel = {
+    pvp_abaixo:'P/VP abaixo de',pvp_acima:'P/VP acima de',
+    pl_abaixo:'P/L abaixo de',preco_abaixo:'Preço abaixo de R$'
+  };
+  el.innerHTML = alertasList.map(a=>`
+    <div class="alerta-item${a._ativado?' ativado':''}">
+      <div class="alerta-info">
+        <span class="alerta-ticker">${a.ticker}</span>
+        <span class="alerta-desc">${tipoLabel[a.tipo]||a.tipo} ${a.valor}</span>
+        ${a._ativado?'<span class="alerta-badge-on">⚠ atingido</span>':''}
+      </div>
+      <button class="btn-del-alerta" onclick="deletarAlerta(${a.id})">✕</button>
+    </div>`).join('');
+}
+
+// ── VERIFICAR ALERTAS ATIVOS ──
+function verificarAlertasVisuais(indicadores){
+  // indicadores = { MXRF11: { pvp: 0.9, pl: null, preco: 10.5 }, ... }
+  alertasList.forEach(a => {
+    const ind = indicadores[a.ticker.toUpperCase()];
+    if(!ind) return;
+    let ativado = false;
+    if(a.tipo==='pvp_abaixo'  && ind.pvp  != null && ind.pvp  < a.valor) ativado = true;
+    if(a.tipo==='pvp_acima'   && ind.pvp  != null && ind.pvp  > a.valor) ativado = true;
+    if(a.tipo==='pl_abaixo'   && ind.pl   != null && ind.pl   < a.valor) ativado = true;
+    if(a.tipo==='preco_abaixo'&& ind.preco!= null && ind.preco< a.valor) ativado = true;
+    a._ativado = ativado;
+  });
+  renderAlertas();
+}
+
+// ── EXPORTAR PDF ──
+function exportarPDF(){
+  renderRelatorio();
+  // Mudar para tab relatório, depois imprimir
+  showTab('relatorio');
+  setTimeout(()=>{
+    window.print();
+  }, 300);
+}
+
+function renderRelatorio(){
+  const agora = new Date();
+  document.getElementById('pdf-data').textContent =
+    agora.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('pdf-usuario').textContent = user?.nome || '';
+
+  // Resumo
+  const total = dadosInvestimentos.reduce((s,i)=>s+i.valor,0);
+  const ativos = [...new Set(dadosInvestimentos.map(i=>i.nome))].length;
+  const tipos  = [...new Set(dadosInvestimentos.map(i=>i.tipo))].length;
+  document.getElementById('pdf-resumo').innerHTML = [
+    {label:'Total investido', val:'R$ '+total.toLocaleString('pt-BR',{minimumFractionDigits:2})},
+    {label:'Ativos únicos',   val:String(ativos)},
+    {label:'Tipos de ativo',  val:String(tipos)},
+  ].map(c=>`
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:3px;padding:14px;">
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">${c.label}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);">${c.val}</div>
+    </div>`).join('');
+
+  // Metas
+  const totalT = dadosInvestimentos.reduce((s,i)=>s+i.valor,0)||1;
+  const porTipo = {};
+  dadosInvestimentos.forEach(i=>porTipo[i.tipo]=(porTipo[i.tipo]||0)+i.valor);
+  const tipos_list = ['fii','acoes','etf','renda-fixa','crypto','outro'];
+  document.getElementById('pdf-metas-list').innerHTML = tipos_list.map(tipo=>{
+    const val  = porTipo[tipo]||0;
+    const real = (val/totalT*100);
+    const meta = metasPremium[tipo]||0;
+    const cor  = CORES[tipo]||'var(--muted)';
+    return`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--s3);">
+      <div style="width:90px;font-size:11px;color:var(--text);">${TL[tipo]||tipo}</div>
+      <div style="flex:1;height:6px;background:var(--s3);border-radius:3px;overflow:hidden;">
+        <div style="width:${Math.min(real,100)}%;height:100%;background:${cor};border-radius:3px;print-color-adjust:exact;"></div>
+      </div>
+      <div style="width:50px;text-align:right;font-size:12px;color:${cor};font-weight:600;">${real.toFixed(1)}%</div>
+      <div style="width:70px;text-align:right;font-size:10px;color:var(--muted);">meta: ${meta}%</div>
+    </div>`;
+  }).join('');
+
+  // Alertas
+  const tipoLabel={pvp_abaixo:'P/VP <',pvp_acima:'P/VP >',pl_abaixo:'P/L <',preco_abaixo:'Preço < R$'};
+  if(!alertasList.length){
+    document.getElementById('pdf-alertas-list').innerHTML =
+      '<div style="font-size:11px;color:var(--muted);">Nenhum alerta configurado.</div>';
+  } else {
+    document.getElementById('pdf-alertas-list').innerHTML = alertasList.map(a=>`
+      <div style="display:flex;gap:16px;align-items:center;padding:8px 0;border-bottom:1px solid var(--s3);">
+        <span style="font-size:12px;font-weight:600;color:var(--text);width:80px;">${a.ticker}</span>
+        <span style="font-size:11px;color:var(--muted);">${tipoLabel[a.tipo]||a.tipo} ${a.valor}</span>
+        ${a._ativado?'<span style="font-size:9px;background:#fbbf2420;color:#fbbf24;padding:2px 7px;border-radius:2px;">⚠ ATIVADO</span>':''}
+      </div>`).join('');
+  }
+}
+
+async function criarAlerta(){
+  const ticker = document.getElementById('alerta-ticker').value.trim().toUpperCase();
+  const tipo   = document.getElementById('alerta-tipo').value;
+  const valor  = parseFloat(document.getElementById('alerta-valor').value);
+  if(!ticker||isNaN(valor)) return alert('Preencha ticker e valor.');
+  const r = await apiPrem('criarAlerta', {usuario_id: user.id, ticker, tipo, valor});
+  if(r.error) return alert(r.error);
+  document.getElementById('alerta-ticker').value = '';
+  document.getElementById('alerta-valor').value  = '';
+  await carregarAlertas();
+}
+
+async function deletarAlerta(id){
+  await apiPrem('deletarAlerta', {usuario_id: user.id, alerta_id: id});
+  alertasList = alertasList.filter(a=>a.id!==id);
+  renderAlertas();
+}
+
+// ── HISTÓRICO ──
+async function verHistorico(){
+  const ticker = document.getElementById('hist-ticker').value.trim().toUpperCase();
+  if(!ticker) return alert('Digite um ticker.');
+
+  const r = await apiPrem('listarHistorico', {usuario_id: user.id, ticker});
+  const canvas = document.getElementById('chart-historico');
+  const vazio  = document.getElementById('hist-vazio');
+
+  if(!r.historico||!r.historico.length){
+    canvas.style.display = 'none';
+    vazio.style.display  = 'block';
+    vazio.textContent    = `Nenhum histórico encontrado para ${ticker}.`;
+    return;
+  }
+
+  vazio.style.display  = 'none';
+  canvas.style.display = 'block';
+
+  if(cHist) cHist.destroy();
+  cHist = new Chart(canvas, {
+    type:'line',
+    data:{
+      labels: r.historico.map(h=>h.data),
+      datasets:[{
+        label: ticker,
+        data: r.historico.map(h=>h.preco),
+        borderColor:'#fbbf24',
+        backgroundColor:'#fbbf2410',
+        fill:true, tension:0.4,
+        pointRadius:4, pointBackgroundColor:'#fbbf24',
+      }]
+    },
+    options:{
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>` R$ ${ctx.raw.toLocaleString('pt-BR',{minimumFractionDigits:2})}`}}
+      },
+      scales:{
+        x:{ticks:{color:'#4d6b70',font:{family:'JetBrains Mono',size:10}},grid:{color:'#161c1e'}},
+        y:{ticks:{color:'#4d6b70',font:{family:'JetBrains Mono',size:10},callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'#161c1e'}},
+      }
+    }
+  });
+}
+
+// ── INIT ──
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('pf_user');
+  if(saved){
+    try{
+      user = JSON.parse(saved);
+      entrar();
+      return;
+    } catch{}
+  }
+  document.getElementById('login-screen').style.display = 'flex';
+});
+</script>
+</body>
+</html>

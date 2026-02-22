@@ -502,6 +502,12 @@ body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospa
     <div class="topbar-logo">Portfólio+</div>
     <div class="topbar-right">
       <span class="topbar-user" id="user-nome"></span>
+      <a id="btn-premium" href="https://financas-premium.crlages.workers.dev" target="_blank" style="
+        display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10px;
+        letter-spacing:1px;text-transform:uppercase;padding:5px 12px;border-radius:3px;
+        cursor:pointer;text-decoration:none;transition:all .2s;
+        background:linear-gradient(90deg,#fbbf24,#fb923c);color:#07090a;border:none;font-weight:600;
+      ">⭐ Premium</a>
       <button class="btn-out" onclick="doLogout()">Sair</button>
     </div>
   </div>
@@ -708,6 +714,7 @@ body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospa
 
 <script>
 const WORKER = 'https://financas.crlages.workers.dev';
+const WORKER_PREMIUM = 'https://financas-premium.crlages.workers.dev';
 let user = null, dados = [], cP = null, cB = null, previewRows = [];
 
 
@@ -746,6 +753,14 @@ function entrar(){
   document.getElementById('user-nome').textContent=user.nome;
   document.getElementById('m-mes').value=new Date().toISOString().slice(0,7);
   document.getElementById('paste-mes').value=new Date().toISOString().slice(0,7);
+  // Atualizar botão premium
+  const btn=document.getElementById('btn-premium');
+  if(user.plano==='premium'){
+    btn.textContent='⭐ Área Premium';
+    btn.style.background='linear-gradient(90deg,#fbbf24,#fb923c)';
+  } else {
+    btn.textContent='⭐ Seja Premium — R$ 5/mês';
+  }
   carregar();
 }
 

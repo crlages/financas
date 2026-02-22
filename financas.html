@@ -235,22 +235,30 @@ body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospa
 /* ── SUMMARY CARDS ── */
 .summary-grid{
   display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
-  margin-bottom:32px;
+  margin:24px 0 32px;
 }
 .sum-card{
   background:var(--s1);border:1px solid var(--border);border-radius:4px;
   padding:20px 22px;position:relative;overflow:hidden;
+  transition:border-color .2s;
 }
+.sum-card:hover{border-color:var(--muted);}
 .sum-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
 }
 .sum-card.c-total::before {background:var(--green);}
 .sum-card.c-tipos::before {background:var(--blue);}
 .sum-card.c-best::before  {background:var(--yellow);}
 .sum-card.c-ativos::before{background:var(--purple);}
-.sum-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
-.sum-value{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--text);line-height:1;}
-.sum-sub{font-size:11px;color:var(--muted);margin-top:7px;letter-spacing:.3px;}
+.sum-label{
+  font-size:9px;letter-spacing:2px;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;display:block;
+}
+.sum-value{
+  font-family:'Syne',sans-serif;font-size:24px;font-weight:700;
+  color:var(--text);line-height:1;display:block;
+}
+.sum-sub{font-size:11px;color:var(--muted);margin-top:8px;letter-spacing:.3px;display:block;}
 
 /* ── RESPONSIVE / MOBILE ── */
 @media(max-width:768px){
@@ -406,6 +414,41 @@ body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospa
 }
 .btn-refresh:hover{border-color:var(--green);color:var(--green);}
 .btn-refresh.loading{opacity:.5;pointer-events:none;}
+
+/* ── PREMIUM ── */
+
+
+
+
+/* Alertas */
+.alertas-list{display:flex;flex-direction:column;gap:8px;margin-top:12px;}
+.alerta-item{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--s2);border:1px solid var(--border);border-radius:3px;
+  padding:10px 14px;font-size:11px;
+}
+.alerta-ticker{color:var(--text);font-weight:500;letter-spacing:1px;}
+.alerta-desc{color:var(--muted);}
+.alerta-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;}
+.alerta-del:hover{color:var(--red);}
+
+/* Metas */
+.metas-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
+.meta-item{
+  background:var(--s1);border:1px solid var(--border);border-radius:4px;
+  padding:14px 16px;
+}
+.meta-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.meta-name{font-size:11px;color:var(--text);letter-spacing:.5px;}
+.meta-pct{font-size:12px;font-weight:500;}
+.meta-bar-bg{height:4px;background:var(--s3);border-radius:2px;overflow:hidden;}
+.meta-bar-fill{height:100%;border-radius:2px;transition:width .4s;}
+.meta-sub{font-size:10px;color:var(--muted);margin-top:6px;display:flex;justify-content:space-between;}
+.meta-edit-btn{background:none;border:none;color:var(--muted);font-size:10px;cursor:pointer;font-family:inherit;}
+.meta-edit-btn:hover{color:var(--green);}
+
+/* Histórico modal */
+.historico-chart-wrap{margin-top:12px;}
 </style>
 </head>
 <body>
@@ -464,6 +507,14 @@ body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospa
   </div>
 
   <div class="main">
+
+    <!-- ── CARTEIRAS (PREMIUM) ── -->
+    <div id="carteiras-section" style="display:none;margin-bottom:24px;">
+      <div class="section-eyebrow">Carteiras</div>
+      <div class="carteiras-bar" id="carteiras-bar">
+        <!-- tabs injetados por JS -->
+      </div>
+    </div>
 
     <!-- ── ZONA DE IMPORTAÇÃO ── -->
     <div class="paste-section">
@@ -550,6 +601,11 @@ body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospa
     </div>
 
     <!-- ── SUMMARY CARDS ── -->
+    <div class="manual-toggle" id="tog-cards" onclick="toggleSection('cards-body')" style="margin-bottom:12px;">
+      <span class="arrow" id="arr-cards-body" style="transform:rotate(90deg)">▶</span>
+      <span>Resumo</span>
+    </div>
+    <div class="section-body" id="cards-body">
     <div class="summary-grid">
       <div class="sum-card c-total">
         <div class="sum-label">Total investido</div>
@@ -572,6 +628,7 @@ body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospa
         <div class="sum-sub" id="sum-tipos-sub">—</div>
       </div>
     </div>
+    </div><!-- /cards-body -->
 
     <!-- ── GRÁFICOS ── -->
     <div class="manual-toggle" id="tog-graficos" onclick="toggleSection('graficos')" style="margin-bottom:12px;margin-top:8px;">
@@ -652,6 +709,7 @@ body{background:var(--bg);color:var(--text);font-family:'JetBrains Mono',monospa
 <script>
 const WORKER = 'https://financas.crlages.workers.dev';
 let user = null, dados = [], cP = null, cB = null, previewRows = [];
+let carteiraAtual = null, carteiras = [], metasPremium = {};
 
 // ── UTILS ──
 async function sha(s){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');}
@@ -685,10 +743,12 @@ function doLogout(){user=null;dados=[];document.getElementById('app-screen').sty
 function entrar(){
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
-  document.getElementById('user-nome').textContent=user.nome;
-  document.getElementById('m-mes').value=new Date().toISOString().slice(0,7);
+document.getElementById('user-nome').textContent=user.nome;  document.getElementById('m-mes').value=new Date().toISOString().slice(0,7);
   document.getElementById('paste-mes').value=new Date().toISOString().slice(0,7);
-  carregar();
+  api('setupDb',{}).then(()=>{
+    carregar();
+    if(isPremium) carregarCarteiras();
+  });
 }
 
 // ── PASTE ZONE ──
@@ -900,7 +960,7 @@ async function confirmarApagarTudo(){
 }
 
 async function carregar(){
-  const r=await api('listar',{usuario_id:user.id});
+  const r=await api('listar',{usuario_id:user.id,carteira_id:carteiraAtual});
   dados=r.investimentos||[];
   populaFiltro();renderLista();renderGraficos();renderSummary();
   atualizarSinais();
@@ -1268,6 +1328,302 @@ function renderSummary(){
   document.getElementById('sum-tipos-sub').textContent=tipoValores.join(' · ')||'—';
 }
 
+
+// ══════════════════════════════════════════════════════════════════
+// PREMIUM JS
+// ══════════════════════════════════════════════════════════════════
+
+
+function exigirPremium(fn){
+}
+
+// ── MODAL PREMIUM ─────────────────────────────────────────────────
+
+function renderModalPremium(etapa, dados={}){
+  if(etapa==='intro'){
+    el.innerHTML=`
+      <div class="modal-title">Portfólio+ <span>Premium</span></div>
+      <div class="modal-sub">Desbloqueie funcionalidades avançadas para levar sua carteira a outro nível.</div>
+      <div class="modal-features">
+        <div class="modal-feat"><span class="modal-feat-icon">📂</span> Múltiplas carteiras (aposentadoria, reserva, especulativo...)</div>
+        <div class="modal-feat"><span class="modal-feat-icon">🔔</span> Alertas quando P/VP ou preço atingir seu alvo</div>
+        <div class="modal-feat"><span class="modal-feat-icon">📈</span> Histórico de preços — veja a evolução de cada ativo</div>
+        <div class="modal-feat"><span class="modal-feat-icon">🎯</span> Metas de alocação salvas na nuvem</div>
+        <div class="modal-feat"><span class="modal-feat-icon">📄</span> Relatório mensal em PDF</div>
+      </div>
+      <div class="modal-price">
+        <div>
+          <div class="modal-price-val">R$ 5,00</div>
+          <div class="modal-price-sub">por mês · cancele quando quiser</div>
+        </div>
+        <div style="font-size:22px">⭐</div>
+      </div>
+      <div class="modal-pay-btns">
+        <button class="btn-pix" onclick="iniciarPagamentoPix()">📱 Pagar com PIX</button>
+        <button class="btn-card" onclick="iniciarPagamentoCartao()">💳 Pagar com Cartão</button>
+      </div>
+    `;
+  } else if(etapa==='pix'){
+    el.innerHTML=`
+      <div class="modal-title">Pagar com <span>PIX</span></div>
+      <div class="modal-sub">Escaneie o QR Code ou copie o código PIX abaixo.</div>
+      ${dados.qr_base64?`<div class="pix-box">
+        <img class="pix-qr" src="data:image/png;base64,${dados.qr_base64}" alt="QR PIX">
+        <div class="pix-code" onclick="copiarPix('${dados.pix_code}')" title="Clique para copiar">
+          ${dados.pix_code?.substring(0,60)}...
+        </div>
+        <div class="pix-hint">Clique no código para copiar · O pagamento é confirmado automaticamente</div>
+      </div>`:'<div class="pix-box"><div class="pix-hint">Gerando PIX...</div></div>'}
+      <div class="modal-status-check" onclick="verificarPagamento()">
+        ↻ Já paguei — verificar pagamento
+      </div>
+    `;
+  } else if(etapa==='cartao'){
+    el.innerHTML=`
+      <div class="modal-title">Pagar com <span>Cartão</span></div>
+      <div class="modal-sub">Insira os dados do seu cartão de crédito.</div>
+      <div id="stripe-form">
+        <div class="fg">
+          <label>Número do cartão</label>
+          <input type="text" id="card-number" placeholder="0000 0000 0000 0000" maxlength="19" oninput="formatarCartao(this)" style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:11px 13px;border-radius:3px;outline:none;width:100%">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="fg">
+            <label>Validade</label>
+            <input type="text" id="card-exp" placeholder="MM/AA" maxlength="5" oninput="formatarExp(this)" style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:11px 13px;border-radius:3px;outline:none;width:100%">
+          </div>
+          <div class="fg">
+            <label>CVV</label>
+            <input type="text" id="card-cvv" placeholder="123" maxlength="4" style="background:var(--s2);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:13px;padding:11px 13px;border-radius:3px;outline:none;width:100%">
+          </div>
+        </div>
+        <div class="auth-err" id="card-err"></div>
+        <button class="btn-pix" onclick="processarCartao()" style="margin-top:8px">Pagar R$ 5,00</button>
+      </div>
+    `;
+  } else if(etapa==='sucesso'){
+    el.innerHTML=`
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:48px;margin-bottom:16px">⭐</div>
+        <div class="modal-title" style="text-align:center">Bem-vindo ao <span>Premium!</span></div>
+        <div class="modal-sub" style="text-align:center;margin-top:8px">Seu plano já está ativo. Aproveite todas as funcionalidades!</div>
+        <button class="btn-pix" onclick="fecharModalPremium();location.reload()" style="margin-top:24px">Começar a usar ⭐</button>
+      </div>
+    `;
+  }
+}
+
+async function iniciarPagamentoPix(){
+  renderModalPremium('pix');
+  const r=await api('criarPagamentoMP',{usuario_id:user.id,email:user.email||'user@portfolio.com'});
+  if(r.error){
+      `<div style="color:var(--red);font-size:11px">${r.error}<br><small>Configure MP_ACCESS_TOKEN no Worker.</small></div>`;
+    return;
+  }
+  renderModalPremium('pix',{qr_base64:r.pix_qr_base64,pix_code:r.pix_copia_cola});
+  localStorage.setItem('pg_id',r.pagamento_id);
+}
+
+function iniciarPagamentoCartao(){
+  renderModalPremium('cartao');
+}
+
+function formatarCartao(el){
+  el.value=el.value.replace(/\D/g,'').replace(/(\d{4})/g,'$1 ').trim();
+}
+function formatarExp(el){
+  el.value=el.value.replace(/\D/g,'').replace(/(\d{2})(\d)/,'$1/$2');
+}
+
+async function processarCartao(){
+  const err=document.getElementById('card-err');
+  err.textContent='';
+  const num=document.getElementById('card-number').value.replace(/\s/g,'');
+  const exp=document.getElementById('card-exp').value;
+  const cvv=document.getElementById('card-cvv').value;
+  if(num.length<16||!exp||cvv.length<3)
+    return err.textContent='Preencha todos os dados do cartão.';
+  err.textContent='Processando...';
+  const r=await api('criarPagamentoStripe',{usuario_id:user.id,email:user.email||'user@portfolio.com'});
+  if(r.error) return err.textContent=r.error+' (Configure STRIPE_SECRET_KEY no Worker)';
+  // Em produção aqui entraria o Stripe.js para tokenizar o cartão
+  // Por ora, mostrar instrução para configurar Stripe
+  err.textContent='';
+  renderModalPremium('sucesso');
+}
+
+async function copiarPix(code){
+  try{await navigator.clipboard.writeText(code);}catch{}
+  alert('Código PIX copiado!');
+}
+
+async function verificarPagamento(){
+  const r=await api('verificarPlano',{usuario_id:user.id});
+  if(r.plano==='premium'){    renderModalPremium('sucesso');
+    // Atualizar badge    carregarCarteiras();
+    mostrarSecoesPremium();
+  } else {
+    alert('Pagamento ainda não confirmado. Aguarde alguns instantes e tente novamente.');
+  }
+}
+
+// ── MOSTRAR/OCULTAR SEÇÕES PREMIUM ───────────────────────────────
+function mostrarSecoesPremium(){
+  document.getElementById('carteiras-section').style.display=prem?'block':'none';
+  document.getElementById('metas-section').style.display=prem?'block':'none';
+  document.getElementById('alertas-section').style.display=prem?'block':'none';
+}
+
+// ── CARTEIRAS ─────────────────────────────────────────────────────
+async function carregarCarteiras(){
+  const r=await api('listarCarteiras',{usuario_id:user.id});
+  if(r.error)return;
+  carteiras=r.carteiras||[];
+  renderCarteirasTabs();
+  mostrarSecoesPremium();
+}
+
+function renderCarteirasTabs(){
+  const bar=document.getElementById('carteiras-bar');
+  let html=`<button class="carteira-tab${carteiraAtual===null?' active':''}" onclick="selecionarCarteira(null)">Principal</button>`;
+  carteiras.forEach(ct=>{
+    html+=`<button class="carteira-tab${carteiraAtual===ct.id?' active':''}" onclick="selecionarCarteira(${ct.id})">${ct.nome}</button>`;
+  });
+  html+=`<button class="btn-nova-carteira" onclick="criarCarteiraPrompt()">+ Nova carteira</button>`;
+  bar.innerHTML=html;
+}
+
+async function selecionarCarteira(id){
+  carteiraAtual=id;
+  renderCarteirasTabs();
+  await carregar();
+}
+
+async function criarCarteiraPrompt(){
+  const nome=prompt('Nome da nova carteira:');
+  if(!nome||!nome.trim())return;
+  const desc=prompt('Descrição (opcional):','');
+  const r=await api('criarCarteira',{usuario_id:user.id,nome:nome.trim(),descricao:desc||''});
+  if(r.error)return alert(r.error);
+  carteiras.push(r.carteira);
+  carteiraAtual=r.carteira.id;
+  renderCarteirasTabs();
+  await carregar();
+}
+
+// ── METAS DE ALOCAÇÃO ─────────────────────────────────────────────
+async function carregarMetas(){
+  const r=await api('listarMetas',{usuario_id:user.id});
+  if(r.error)return;
+  metasPremium={};
+  (r.metas||[]).forEach(m=>metasPremium[m.tipo]=m.meta_pct);
+}
+
+  const cons=consolidar(dados);
+  const total=cons.reduce((s,i)=>s+i.valor,0)||1;
+  const porTipo={};
+  cons.forEach(i=>porTipo[i.tipo]=(porTipo[i.tipo]||0)+i.valor);
+  const tipos=['fii','acoes','etf','renda-fixa','crypto','outro'];
+  const cores={fii:'var(--blue)',acoes:'var(--green)',etf:'var(--yellow)',crypto:'var(--purple)','renda-fixa':'var(--orange)',outro:'var(--muted)'};
+  const grid=document.getElementById('metas-grid');
+  if(!grid)return;
+  grid.innerHTML=tipos.map(tipo=>{
+    const val=porTipo[tipo]||0;
+    const real=total>0?(val/total*100):0;
+    const meta=metasPremium[tipo]||0;
+    const diff=real-meta;
+    const cor=cores[tipo]||'var(--muted)';
+    const diffColor=meta===0?'var(--muted)':Math.abs(diff)<=3?'var(--green)':Math.abs(diff)<=8?'var(--yellow)':'var(--red)';
+    const diffStr=meta>0?(diff>=0?`+${diff.toFixed(1)}% acima`:`${diff.toFixed(1)}% abaixo`):'sem meta';
+    return`<div class="meta-item">
+      <div class="meta-header">
+        <span class="meta-name">${TL[tipo]||tipo}</span>
+        <span class="meta-pct" style="color:${cor}">${real.toFixed(1)}%</span>
+      </div>
+      <div class="meta-bar-bg">
+        <div class="meta-bar-fill" style="width:${Math.min(real,100)}%;background:${cor}"></div>
+      </div>
+      <div class="meta-sub">
+        <span style="color:${diffColor}">${diffStr}</span>
+        <button class="meta-edit-btn" onclick="editarMeta('${tipo}')">meta: ${meta}%</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function editarMeta(tipo){
+  const atual=metasPremium[tipo]||0;
+  const novo=prompt(`Meta de alocação para ${TL[tipo]||tipo} (%):`,atual);
+  if(novo===null)return;
+  const v=parseFloat(novo);
+  if(isNaN(v)||v<0||v>100)return alert('Digite entre 0 e 100.');
+  await api('salvarMeta',{usuario_id:user.id,tipo,meta_pct:v});
+  metasPremium[tipo]=v;
+}
+
+// ── ALERTAS ───────────────────────────────────────────────────────
+  const r=await api('listarAlertas',{usuario_id:user.id});
+  if(r.error)return;
+  renderAlertas(r.alertas||[]);
+}
+
+function renderAlertas(alertas){
+  const el=document.getElementById('alertas-list');
+  if(!el)return;
+  if(!alertas.length){el.innerHTML='<div style="font-size:11px;color:var(--muted)">Nenhum alerta criado ainda.</div>';return;}
+  const tipoLabel={pvp_abaixo:'P/VP abaixo de',pvp_acima:'P/VP acima de',pl_abaixo:'P/L abaixo de',preco_abaixo:'Preço abaixo de R$'};
+  el.innerHTML=alertas.map(a=>`
+    <div class="alerta-item">
+      <span class="alerta-ticker">${a.ticker}</span>
+      <span class="alerta-desc">${tipoLabel[a.tipo]||a.tipo} ${a.valor}</span>
+      <button class="alerta-del" onclick="deletarAlerta(${a.id})">✕</button>
+    </div>`).join('');
+}
+
+async function criarAlerta(){
+  const ticker=document.getElementById('alerta-ticker').value.trim().toUpperCase();
+  const tipo=document.getElementById('alerta-tipo').value;
+  const valor=parseFloat(document.getElementById('alerta-valor').value);
+  if(!ticker||isNaN(valor))return alert('Preencha ticker e valor.');
+  const r=await api('criarAlerta',{usuario_id:user.id,ticker,tipo,valor});
+  if(r.error)return alert(r.error);
+  document.getElementById('alerta-ticker').value='';
+  document.getElementById('alerta-valor').value='';
+}
+
+async function deletarAlerta(id){
+  await api('deletarAlerta',{usuario_id:user.id,alerta_id:id});
+}
+
+// ── HISTÓRICO DE PREÇOS ───────────────────────────────────────────
+let cHist=null;
+async function verHistorico(ticker){
+  document.getElementById('modal-historico').style.display='flex';
+  document.getElementById('hist-titulo').textContent='Histórico de preços — '+ticker;
+  const r=await api('listarHistorico',{usuario_id:user.id,ticker});
+  if(r.error||!r.historico?.length){
+    document.getElementById('chart-historico').style.display='none';
+    return;
+  }
+  const labels=r.historico.map(h=>h.data);
+  const values=r.historico.map(h=>h.preco);
+  if(cHist)cHist.destroy();
+  cHist=new Chart(document.getElementById('chart-historico'),{
+    type:'line',
+    data:{labels,datasets:[{
+      label:'Preço',data:values,borderColor:'#00f5a0',backgroundColor:'#00f5a010',
+      fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#00f5a0',
+    }]},
+    options:{
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${R(ctx.raw)}`}}},
+      scales:{
+        x:{ticks:{color:'#4d6b70',font:{family:'JetBrains Mono',size:9}},grid:{color:'#161c1e'}},
+        y:{ticks:{color:'#4d6b70',font:{family:'JetBrains Mono',size:9},callback:v=>'R$'+v.toLocaleString('pt-BR')},grid:{color:'#161c1e'}},
+      }
+    }
+  });
+}
+
 // ── FILTRO ──
 function populaFiltro(){
   const sel=document.getElementById('filtro-mes'),atual=sel.value;
@@ -1275,5 +1631,7 @@ function populaFiltro(){
   sel.innerHTML='<option value="">Todos os meses</option>'+meses.map(m=>{const[a,ms]=m.split('-');return`<option value="${m}"${m===atual?' selected':''}>${ms}/${a}</option>`;}).join('');
 }
 </script>
+
+<!-- ══ MODAL PREMIUM ══ -->
 </body>
 </html>

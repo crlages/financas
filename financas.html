@@ -746,8 +746,9 @@ async function doLogin(){
   if(r.error)return err.textContent=r.error;
   user=r.user;entrar();
 }
-function doLogout(){user=null;dados=[];document.getElementById('app-screen').style.display='none';document.getElementById('auth-screen').style.display='flex';}
+function doLogout(){user=null;dados=[];localStorage.removeItem('pf_user');document.getElementById('app-screen').style.display='none';document.getElementById('auth-screen').style.display='flex';}
 function entrar(){
+  localStorage.setItem('pf_user', JSON.stringify(user));
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app-screen').style.display='block';
   document.getElementById('user-nome').textContent=user.nome;
@@ -771,6 +772,12 @@ function focusPaste(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
+  // Restaurar sessão salva
+  try {
+    const saved = localStorage.getItem('pf_user');
+    if(saved){ user = JSON.parse(saved); entrar(); }
+  } catch { localStorage.removeItem('pf_user'); }
+
   const inp=document.getElementById('paste-input');
   const drop=document.getElementById('drop-target');
 
@@ -973,7 +980,7 @@ async function confirmarApagarTudo(){
 }
 
 async function carregar(){
-  const r=await api('listar',{usuario_id:user.id,carteira_id:carteiraAtual});
+  const r=await api('listar',{usuario_id:user.id});
   dados=r.investimentos||[];
   populaFiltro();renderLista();renderGraficos();renderSummary();
   atualizarSinais();

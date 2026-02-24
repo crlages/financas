@@ -496,6 +496,11 @@ let alertasList = [];
 let cHist = null;
 
 const TL = {fii:'FII',acoes:'Ações',etf:'ETF','renda-fixa':'Renda Fixa',crypto:'Crypto',outro:'Outro'};
+
+async function sha(s){
+  const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('');
+}
 const CORES = {fii:'var(--blue)',acoes:'var(--green)',etf:'var(--yellow)',crypto:'var(--purple)','renda-fixa':'var(--orange)',outro:'var(--muted)'};
 
 // ── UTILS ──
@@ -523,7 +528,7 @@ async function doLogin(){
   err.textContent = '';
   if(!email||!senha) return err.textContent='Preencha e-mail e senha.';
 
-  const r = await api('login', {email, senha});
+  const r = await api('login', {email, senha: await sha(senha)});
   if(r.error) return err.textContent = r.error;
   user = r.user;
   localStorage.setItem('pf_user', JSON.stringify(user));
